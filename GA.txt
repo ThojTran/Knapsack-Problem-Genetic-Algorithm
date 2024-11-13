@@ -1,0 +1,92 @@
+// import visualization libraries {
+const { Tracer, Array1DTracer, Array2DTracer, LogTracer, Layout, VerticalLayout } = require('algorithm-visualizer');
+// }
+
+const val = [2151, 3002, 3287, 2059, 2259, 1371, 1025, 2573, 2750, 64, 492, 1971, 3372, 3776, 1259, 929, 3169, 3103, 452, 2005, 1612, 1826, 3255, 753, 2002, 2138, 3313, 768, 3894, 2591, 1401, 3749, 1272, 2560, 2105, 2498, 692, 2667, 962, 36, 2831]; // The value of all available items
+const wt = [189, 1717, 1042, 2398, 3390, 570, 988, 3654, 169, 1308, 1020, 3550, 36, 561, 960, 2204, 691, 1140, 2533, 2318, 1918, 3047, 562, 3212, 2069, 3192, 2725, 2976, 576, 1766, 658, 2067, 3915, 2099, 1525, 1606, 1957, 1926, 163, 2177, 2769]; // The weights of available items
+const W = 50000; // The maximum weight we can carry in our collection
+const N = val.length;
+const DP = new Array(N + 1);
+
+for (let i = 0; i < N + 1; i++) {
+  DP[i] = new Array(W + 1);
+  for (let j = 0; j < W + 1; j++) {
+    DP[i][j] = 0;
+  }
+}
+
+// define tracer variables {
+const tracer = new Array2DTracer('Knapsack Table');
+const valuesTracer = new Array1DTracer('Values');
+const weightsTracer = new Array1DTracer('Weights');
+const logger = new LogTracer();
+Layout.setRoot(new VerticalLayout([tracer, valuesTracer, weightsTracer, logger]));
+tracer.set(DP);
+valuesTracer.set(val);
+weightsTracer.set(wt);
+Tracer.delay();
+// }
+
+for (let i = 0; i <= N; i++) {
+  for (let j = 0; j <= W; j++) {
+    if (i === 0 || j === 0) {
+      /*
+      If we have no items or maximum weight we can take in collection is 0
+      then the total weight in our collection is 0
+      */
+      DP[i][0] = 0;
+      // visualize {
+      tracer.patch(i, j, DP[i][j]);
+      Tracer.delay();
+      tracer.depatch(i, j);
+      // }
+    } else if (wt[i - 1] <= j) { // take the current item in our collection
+      // visualize {
+      weightsTracer.select(i - 1);
+      valuesTracer.select(i - 1);
+      Tracer.delay();
+      tracer.select(i - 1, j - wt[i - 1]);
+      tracer.select(i - 1, j);
+      Tracer.delay();
+      // }
+      const A = val[i - 1] + DP[i - 1][j - wt[i - 1]];
+      const B = DP[i - 1][j];
+      /*
+      find the maximum of these two values
+      and take which gives us a greater weight
+       */
+      if (A > B) {
+        DP[i][j] = A;
+        // visualize {
+        tracer.patch(i, j, DP[i][j]);
+        Tracer.delay();
+        // }
+      } else {
+        DP[i][j] = B;
+        // visualize {
+        tracer.patch(i, j, DP[i][j]);
+        Tracer.delay();
+        // }
+      }
+      // visualize {
+      // opt subproblem depatch
+      tracer.depatch(i, j);
+      tracer.deselect(i - 1, j);
+      tracer.deselect(i - 1, j - wt[i - 1]);
+      valuesTracer.deselect(i - 1);
+      weightsTracer.deselect(i - 1);
+      // }
+    } else { // leave the current item from our collection
+      DP[i][j] = DP[i - 1][j];
+      // visualize {
+      tracer.patch(i, j, DP[i][j]);
+      Tracer.delay();
+      tracer.depatch(i, j);
+      // }
+    }
+  }
+}
+
+// logger {
+logger.println(` Best value we can achieve is ${DP[N][W]}`);
+// }
